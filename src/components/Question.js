@@ -1,16 +1,40 @@
-import React, { useState } from "react";
 
-function Question({ question, onAnswered }) {
-  const [timeRemaining, setTimeRemaining] = useState(10);
+import React, { useEffect, useState } from "react";
 
-  // add useEffect code
 
-  function handleAnswer(isCorrect) {
-    setTimeRemaining(10);
-    onAnswered(isCorrect);
-  }
-
+function Question({ question, onAnswered, timeRemaining }) {
   const { id, prompt, answers, correctIndex } = question;
+  // const [timer, setTimer] = useState(null);
+  const [remainingTime, setRemainingTime] = useState(timeRemaining);
+
+  useEffect(() => {
+    let timeoutId;
+    const tick = () => {
+      setRemainingTime(prevTime => {
+        if (prevTime > 0) {
+          return prevTime - 1;
+        } else {
+          onAnswered(false);
+          return 0;
+        }
+      });
+    };
+    
+    if (remainingTime > 0) {
+      timeoutId = setTimeout(tick, 1000);
+    } else {
+      onAnswered(false); 
+    }
+
+    return () => clearTimeout(timeoutId);
+  }, [remainingTime, onAnswered]);
+
+ 
+
+  const handleAnswer = (isCorrect) => {
+    clearTimeout(); 
+    onAnswered(isCorrect);
+  };
 
   return (
     <>
@@ -24,7 +48,7 @@ function Question({ question, onAnswered }) {
           </button>
         );
       })}
-      <h5>{timeRemaining} seconds remaining</h5>
+      {remainingTime > 0 && <h5>{remainingTime} seconds remaining</h5>}
     </>
   );
 }

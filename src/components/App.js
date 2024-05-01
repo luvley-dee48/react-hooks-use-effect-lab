@@ -1,21 +1,50 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Question from "./Question";
 import quiz from "../data/quiz";
 
+
 function App() {
   const [questions, setQuestions] = useState(quiz);
-  const [currentQuestionId, setCurrentQuestion] = useState(1);
+  const [currentQuestionId, setCurrentQuestionId] = useState(1);
   const [score, setScore] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(10);
+
   const currentQuestion = questions.find((q) => q.id === currentQuestionId);
+
+  useEffect(() => {
+    
+    return () => clearTimeout(timeoutId);
+  }, [currentQuestionId]); 
+  useEffect(() => {
+    if (!currentQuestion) return; 
+
+    let timeoutId;
+
+    
+    const updateTime = () => {
+      setTimeRemaining((prevTime) => {
+        if (prevTime === 0) {
+          handleQuestionAnswered(false); 
+        }
+        return Math.max(0, prevTime - 1); 
+      });
+    };
+
+    
+    timeoutId = setTimeout(updateTime, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [currentQuestion]); 
+
 
   function handleQuestionAnswered(correct) {
     if (currentQuestionId < questions.length) {
-      setCurrentQuestion((currentQuestionId) => currentQuestionId + 1);
+      setCurrentQuestionId((prevId) => prevId + 1);
+      setTimeRemaining(10);
     } else {
-      setCurrentQuestion(null);
+      setCurrentQuestionId(null);
     }
     if (correct) {
-      setScore((score) => score + 1);
+      setScore((prevScore) => prevScore + 1);
     }
   }
 
@@ -25,6 +54,7 @@ function App() {
         {currentQuestion ? (
           <Question
             question={currentQuestion}
+            timeRemaining={timeRemaining}
             onAnswered={handleQuestionAnswered}
           />
         ) : (
